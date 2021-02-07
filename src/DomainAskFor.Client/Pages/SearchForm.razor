@@ -1,0 +1,65 @@
+﻿@using Models
+@using HttpRepository
+@using HttpRepository.SynonymsRepository
+@using Radzen.Blazor
+@inject IWhoIsHttpRepository whoIsRepository
+@inject ISynonymRepository syonymsRepository
+
+<EditForm Model="searchFormModel" OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <InputText id="prefix" @bind-Value="searchFormModel.Prefix" />
+    <InputText id="word" @bind-Value="searchFormModel.Word" />
+    <InputText id="suffix" @bind-Value="searchFormModel.Suffix" />
+    <select @bind="searchFormModel.TLD">
+        @foreach (Enum e in Enum.GetValues(typeof(TLDModel)))
+        {
+            <option value="@e">.@e.ToString()</option>
+        }
+
+    </select>
+    <button id="Clear" @onclick="@ClearValues">Clear</button>
+    <button id="Submit" type="submit">Submit</button>
+
+</EditForm>
+
+@code {
+
+    private SearchFormModel searchFormModel = new SearchFormModel();
+    private EditContext editContext;
+    IEnumerable<TLDModel> tlds = Enum.GetValues(typeof(TLDModel)).Cast<TLDModel>();
+    protected override void OnInitialized()
+    {
+        editContext = new EditContext(searchFormModel);
+    }
+    private async Task HandleValidSubmit()
+    {
+
+        var isValid = editContext.Validate();
+        if (isValid)
+        {
+            var urlsToWhoIs = new List<string>();
+            var wordResponse = await syonymsRepository.GetSynonymsByWord(searchFormModel.Word);
+            if (wordResponse.synonyms.Count > 0)
+            {
+                foreach (var synonym in wordResponse.synonyms)
+                {
+                    urlsToWhoIs.Add(searchFormModel.Prefix + synonym + searchFormModel.Suffix + searchFormModel.TLD.ToString())
+                }
+            }
+
+            var URIResponse = await whoIsRepository.GetWhoIsResultByURI($"{searchFormModel.Prefix}{searchFormModel}");
+
+
+        }
+        else
+        {
+
+        }
+    }
+    private void ClearValues()
+    {
+        searchFormModel = new SearchFormModel();
+    }
+
+}
