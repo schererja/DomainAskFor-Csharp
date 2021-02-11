@@ -40,11 +40,12 @@
         {
             var urlsToWhoIs = new List<string>();
             var wordResponse = await syonymsRepository.GetSynonymsByWord(searchFormModel.Word);
+            urlsToWhoIs.Add(searchFormModel.Prefix + searchFormModel.Word + searchFormModel.Suffix + searchFormModel.TLD.ToString());
             if (wordResponse.synonyms.Count > 0)
             {
                 foreach (var synonym in wordResponse.synonyms)
                 {
-                    urlsToWhoIs.Add(searchFormModel.Prefix + synonym + searchFormModel.Suffix + searchFormModel.TLD.ToString())
+                    urlsToWhoIs.Add(searchFormModel.Prefix + synonym + searchFormModel.Suffix + searchFormModel.TLD.ToString());
                 }
             }
 

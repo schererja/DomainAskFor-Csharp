@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\DomainAskFor.Models\DomainAskFor.Models.csproj" />
   </ItemGroup>
 
 </Project>

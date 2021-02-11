@@ -1,7 +1,5 @@
-﻿using domainaskfor.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿
+using DomainAskFor.Models;
 using System.Threading.Tasks;
 
 namespace DomainAskFor.Client.HttpRepository

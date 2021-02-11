@@ -1,4 +1,4 @@
-﻿namespace api.models
+﻿namespace DomainAskFor.Models
 {
   public class WhoIsResult
   {

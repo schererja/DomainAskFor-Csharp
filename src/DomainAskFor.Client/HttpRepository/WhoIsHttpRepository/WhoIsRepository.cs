@@ -1,4 +1,5 @@
-﻿using domainaskfor.Models;
+﻿
+using DomainAskFor.Models;
 using System;
 using System.Net.Http;
 using System.Text.Json;
@@ -26,5 +27,6 @@ namespace DomainAskFor.Client.HttpRepository
             var whoIsResponse = JsonSerializer.Deserialize<WhoIsResult>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                 return whoIsResponse;
         }
+
     }
 }

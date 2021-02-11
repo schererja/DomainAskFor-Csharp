@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using DomainAskFor.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Whois.NET;
 
-using api.models;
 
 namespace DomainAskFor.API.Controllers
 {

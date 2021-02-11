@@ -1,10 +1,11 @@
-﻿namespace api.models
+﻿using System.Collections.Generic;
+
+namespace DomainAskFor.Models
 {
 
   public class SynonymsResult
   {
-    public string DomainName { get; set; }
-    public bool IsAvailable { get; set; }
+        public List<string> synonyms { get; set; }
   }
 
 

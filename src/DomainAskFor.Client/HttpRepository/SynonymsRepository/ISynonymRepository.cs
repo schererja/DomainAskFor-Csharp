@@ -1,4 +1,4 @@
-﻿using domainaskfor_models;
+﻿using DomainAskFor.Models;
 using System.Threading.Tasks;
 
 namespace DomainAskFor.Client.HttpRepository.SynonymsRepository
