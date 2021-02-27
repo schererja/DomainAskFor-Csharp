@@ -14,7 +14,7 @@ Run in the Client folder for the Blazor client
 dotnet watch run
 
 ```
-Run in the API folder for the Blazor client
+Run in the API folder for the server
 
 ```bash
 
