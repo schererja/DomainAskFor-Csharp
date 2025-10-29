@@ -3,64 +3,237 @@
 @using HttpRepository.SynonymsRepository
 @using Radzen.Blazor
 @inject IWhoIsHttpRepository whoIsRepository
-@inject ISynonymRepository syonymsRepository
+@inject ISynonymRepository synonymsRepository
 
-<EditForm Model="searchFormModel" OnValidSubmit="@HandleValidSubmit">
+<div class="search-form">
+  <EditForm Model="searchFormModel" OnValidSubmit="@HandleValidSubmit">
     <DataAnnotationsValidator />
     <ValidationSummary />
-    <InputText id="prefix" @bind-Value="searchFormModel.Prefix" />
-    <InputText id="word" @bind-Value="searchFormModel.Word" />
-    <InputText id="suffix" @bind-Value="searchFormModel.Suffix" />
-    <select @bind="searchFormModel.TLD">
+
+    <div class="form-group">
+      <label for="prefix">Prefix (optional)</label>
+      <InputText id="prefix" class="form-control" @bind-Value="searchFormModel.Prefix"
+        placeholder="e.g., my, get, find" />
+    </div>
+
+    <div class="form-group">
+      <label for="word">Word *</label>
+      <InputText id="word" class="form-control" @bind-Value="searchFormModel.Word" placeholder="e.g., domain, name" />
+    </div>
+
+    <div class="form-group">
+      <label for="suffix">Suffix (optional)</label>
+      <InputText id="suffix" class="form-control" @bind-Value="searchFormModel.Suffix"
+        placeholder="e.g., now, online, app" />
+    </div>
+
+    <div class="form-group">
+      <label for="tld">Top Level Domain *</label>
+      <select id="tld" class="form-control" @bind="searchFormModel.TLD">
         @foreach (Enum e in Enum.GetValues(typeof(TLDModel)))
         {
-            <option value="@e">.@e.ToString()</option>
+          <option value="@e">.@e.ToString()</option>
         }
+      </select>
+    </div>
 
-    </select>
-    <button id="Clear" @onclick="@ClearValues">Clear</button>
-    <button id="Submit" type="submit">Submit</button>
-
-</EditForm>
-
-@code {
-
-    private SearchFormModel searchFormModel = new SearchFormModel();
-    private EditContext editContext;
-    IEnumerable<TLDModel> tlds = Enum.GetValues(typeof(TLDModel)).Cast<TLDModel>();
-    protected override void OnInitialized()
-    {
-        editContext = new EditContext(searchFormModel);
-    }
-    private async Task HandleValidSubmit()
-    {
-
-        var isValid = editContext.Validate();
-        if (isValid)
+    <div class="form-group">
+      <button class="btn btn-secondary" type="button" @onclick="@ClearValues">Clear</button>
+      <button class="btn btn-primary" type="submit" disabled="@isSearching">
+        @if (isSearching)
         {
-            var urlsToWhoIs = new List<string>();
-            var wordResponse = await syonymsRepository.GetSynonymsByWord(searchFormModel.Word);
-            urlsToWhoIs.Add(searchFormModel.Prefix + searchFormModel.Word + searchFormModel.Suffix + searchFormModel.TLD.ToString());
-            if (wordResponse.synonyms.Count > 0)
-            {
-                foreach (var synonym in wordResponse.synonyms)
-                {
-                    urlsToWhoIs.Add(searchFormModel.Prefix + synonym + searchFormModel.Suffix + searchFormModel.TLD.ToString());
-                }
-            }
-
-            var URIResponse = await whoIsRepository.GetWhoIsResultByURI($"{searchFormModel.Prefix}{searchFormModel}");
-
-
+          <span>Searching...</span>
         }
         else
         {
-
+          <span>Search Domains</span>
         }
-    }
-    private void ClearValues()
-    {
-        searchFormModel = new SearchFormModel();
-    }
+      </button>
+    </div>
+  </EditForm>
+</div>
 
+@if (domainResults.Any())
+{
+  <div class="results-section">
+    <h3>Domain Search Results</h3>
+    <p>Found @domainResults.Count domain(s) to check:</p>
+
+    @foreach (var result in domainResults)
+    {
+      <div class="domain-result @(result.IsAvailable ? "domain-available" : "domain-unavailable")">
+        <div class="domain-info">
+          <strong>@result.DomainName</strong>
+          @if (result.IsAvailable)
+          {
+            <span class="badge badge-success">✓ Available</span>
+          }
+          else
+          {
+            <span class="badge badge-danger">✗ Taken</span>
+          }
+        </div>
+        @if (result.IsAvailable)
+        {
+          <div class="domain-actions mt-2">
+            <p class="text-muted small mb-2">Buy this domain at:</p>
+            <a href="@GetRegistrarUrl("namecheap", result.DomainName)" target="_blank" class="btn btn-sm btn-primary me-2">
+              Namecheap
+            </a>
+            <a href="@GetRegistrarUrl("godaddy", result.DomainName)" target="_blank" class="btn btn-sm btn-primary me-2">
+              GoDaddy
+            </a>
+            <a href="@GetRegistrarUrl("squarespace", result.DomainName)" target="_blank" class="btn btn-sm btn-primary me-2">
+              Squarespace
+            </a>
+            <a href="@GetRegistrarUrl("porkbun", result.DomainName)" target="_blank" class="btn btn-sm btn-primary">
+              Porkbun
+            </a>
+          </div>
+        }
+      </div>
+    }
+  </div>
+}
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+  <div class="alert alert-danger">
+    @errorMessage
+  </div>
+}
+
+@code {
+  private SearchFormModel searchFormModel = new SearchFormModel();
+  private EditContext editContext;
+  private bool isSearching = false;
+  private string errorMessage = "";
+  private List<DomainSearchResult> domainResults = new List<DomainSearchResult>();
+
+  protected override void OnInitialized()
+  {
+    editContext = new EditContext(searchFormModel);
+  }
+
+  private async Task HandleValidSubmit()
+  {
+    var isValid = editContext.Validate();
+    if (!isValid) return;
+
+    isSearching = true;
+    errorMessage = "";
+    domainResults.Clear();
+    StateHasChanged();
+
+    try
+    {
+      var urlsToWhoIs = new List<string>();
+
+      // Add the main word
+      var mainDomain =
+      SanitizeDomainName($"{searchFormModel.Prefix}{searchFormModel.Word}{searchFormModel.Suffix}.{searchFormModel.TLD.ToString()}");
+      urlsToWhoIs.Add(mainDomain);
+
+      // Get synonyms and add them
+      var wordResponse = await synonymsRepository.GetSynonymsByWord(searchFormModel.Word);
+      if (wordResponse?.synonyms != null && wordResponse.synonyms.Count > 0)
+      {
+        foreach (var synonym in wordResponse.synonyms)
+        {
+          var synonymDomain =
+          SanitizeDomainName($"{searchFormModel.Prefix}{synonym}{searchFormModel.Suffix}.{searchFormModel.TLD.ToString()}");
+          urlsToWhoIs.Add(synonymDomain);
+        }
+      }
+
+      // Check each domain
+      foreach (var domain in urlsToWhoIs)
+      {
+        try
+        {
+          var whoisResult = await whoIsRepository.GetWhoIsResultByURI(domain);
+          domainResults.Add(new DomainSearchResult
+          {
+            DomainName = domain,
+            IsAvailable = whoisResult?.IsAvailable ?? false
+          });
+        }
+        catch
+        {
+          // If there's an error checking a specific domain, mark it as unavailable
+          domainResults.Add(new DomainSearchResult
+          {
+            DomainName = domain,
+            IsAvailable = false
+          });
+        }
+        StateHasChanged(); // Update UI as we check each domain
+      }
+    }
+    catch (Exception ex)
+    {
+      errorMessage = $"Error searching domains: {ex.Message}";
+    }
+    finally
+    {
+      isSearching = false;
+      StateHasChanged();
+    }
+  }
+
+  private void ClearValues()
+  {
+    searchFormModel = new SearchFormModel();
+    domainResults.Clear();
+    errorMessage = "";
+  }
+
+  private string GetRegistrarUrl(string registrar, string domainName)
+  {
+    // Remove the leading dot if present
+    domainName = domainName.TrimStart('.');
+
+    return registrar.ToLower() switch
+    {
+      "namecheap" => $"https://www.namecheap.com/domains/registration/results/?domain={domainName}",
+      "godaddy" => $"https://www.godaddy.com/domainsearch/find?checkAvail=1&domainToCheck={domainName}",
+      "squarespace" => $"https://domains.squarespace.com/search?query={domainName}",
+      "porkbun" => $"https://porkbun.com/checkout/search?q={domainName}",
+      _ => $"https://www.namecheap.com/domains/registration/results/?domain={domainName}"
+    };
+  }
+
+  private string SanitizeDomainName(string domainName)
+  {
+    if (string.IsNullOrWhiteSpace(domainName))
+      return string.Empty;
+
+    // Remove all whitespace
+    domainName = domainName.Replace(" ", "");
+
+    // Remove any invalid characters (keep only alphanumeric, hyphens, and dots)
+    domainName = System.Text.RegularExpressions.Regex.Replace(domainName, @"[^a-zA-Z0-9\-\.]", "");
+
+    // Remove consecutive hyphens
+    domainName = System.Text.RegularExpressions.Regex.Replace(domainName, @"-+", "-");
+
+    // Remove hyphens at the start or end (before the TLD)
+    var parts = domainName.Split('.');
+    if (parts.Length > 0)
+    {
+      parts[0] = parts[0].Trim('-');
+    }
+    domainName = string.Join(".", parts);
+
+    // Convert to lowercase
+    domainName = domainName.ToLower();
+
+    return domainName;
+  }
+
+  private class DomainSearchResult
+  {
+    public string DomainName { get; set; }
+    public bool IsAvailable { get; set; }
+  }
 }
