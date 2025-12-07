@@ -1,0 +1,201 @@
+@page "/dashboard"
+@using DomainAskFor.Models
+@using DomainAskFor.Client.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@attribute [Authorize]
+@inject ISearchHistoryService SearchHistoryService
+@inject IAuthService AuthService
+@inject NavigationManager NavigationManager
+
+<div class="container">
+  <div class="row">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>My Dashboard</h2>
+        <div>
+          <AuthorizeView>
+            <Authorized>
+              <span class="me-3">Welcome, @context.User.Identity.Name</span>
+              <button class="btn btn-outline-secondary btn-sm" @onclick="HandleLogout">Logout</button>
+            </Authorized>
+          </AuthorizeView>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header">
+          <h4>Quick Actions</h4>
+        </div>
+        <div class="card-body">
+          <a href="/" class="btn btn-primary">New Domain Search</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h4>Search History</h4>
+          <button class="btn btn-outline-primary btn-sm" @onclick="LoadSearchHistory">
+            <span>Refresh</span>
+          </button>
+        </div>
+        <div class="card-body">
+          @if (isLoading)
+          {
+            <div class="text-center py-4">
+              <p>Loading search history...</p>
+            </div>
+          }
+          else if (searchHistory == null || !searchHistory.Any())
+          {
+            <div class="text-center py-4">
+              <p class="text-muted">No searches yet. <a href="/">Start searching</a> to see your history here.</p>
+            </div>
+          }
+          else
+          {
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Search Term</th>
+                    <th>TLD</th>
+                    <th>Results</th>
+                    <th>Available Domains</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @foreach (var search in searchHistory.OrderByDescending(s => s.SearchedAt))
+                  {
+                    <tr>
+                      <td>@search.SearchedAt.ToString("MMM dd, yyyy HH:mm")</td>
+                      <td>
+                        @if (!string.IsNullOrEmpty(search.Prefix))
+                        {
+                          <span class="badge bg-secondary">@search.Prefix</span>
+                        }
+                        <strong>@search.SearchTerm</strong>
+                        @if (!string.IsNullOrEmpty(search.Suffix))
+                        {
+                          <span class="badge bg-secondary">@search.Suffix</span>
+                        }
+                      </td>
+                      <td><span class="badge bg-info">.@search.TLD</span></td>
+                      <td>@search.Results?.Count ?? 0</td>
+                      <td>
+                        @{
+                          var availableCount = search.Results?.Count(r => r.IsAvailable) ?? 0;
+                          var badgeClass = availableCount > 0 ? "bg-success" : "bg-secondary";
+                        }
+                        <span class="badge @badgeClass">@availableCount available</span>
+                      </td>
+                      <td>
+                        <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => ViewSearchDetails(search)">
+                          View
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteSearch(search.Id)">
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+      </div>
+
+      @if (selectedSearch != null)
+      {
+        <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Search Results Details</h5>
+                <button type="button" class="btn-close" @onclick="CloseModal"></button>
+              </div>
+              <div class="modal-body">
+                <p><strong>Search Term:</strong> @selectedSearch.Prefix@selectedSearch.SearchTerm@selectedSearch.Suffix
+                </p>
+                <p><strong>Date:</strong> @selectedSearch.SearchedAt.ToString("MMMM dd, yyyy HH:mm")</p>
+                <p><strong>TLD:</strong> .@selectedSearch.TLD</p>
+
+                <h6 class="mt-3">Results:</h6>
+                @if (selectedSearch.Results != null && selectedSearch.Results.Any())
+                {
+                  <div class="list-group">
+                    @foreach (var result in selectedSearch.Results)
+                    {
+                      <div
+                        class="list-group-item @(result.IsAvailable ? "list-group-item-success" : "list-group-item-secondary")">
+                        <div class="d-flex justify-content-between align-items-center">
+                          <span>@result.DomainName</span>
+                          @if (result.IsAvailable)
+                          {
+                            <span class="badge bg-success">✓ Available</span>
+                          }
+                          else
+                          {
+                            <span class="badge bg-danger">✗ Taken</span>
+                          }
+                        </div>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @onclick="CloseModal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+@code {
+  private List<SearchHistoryModel> searchHistory = new List<SearchHistoryModel>();
+  private SearchHistoryModel selectedSearch = null;
+  private bool isLoading = true;
+
+  protected override async Task OnInitializedAsync()
+  {
+    await LoadSearchHistory();
+  }
+
+  private async Task LoadSearchHistory()
+  {
+    isLoading = true;
+    searchHistory = await SearchHistoryService.GetSearchHistory();
+    isLoading = false;
+  }
+
+  private async Task DeleteSearch(int searchId)
+  {
+    var success = await SearchHistoryService.DeleteSearch(searchId);
+    if (success)
+    {
+      await LoadSearchHistory();
+    }
+  }
+
+  private void ViewSearchDetails(SearchHistoryModel search)
+  {
+    selectedSearch = search;
+  }
+
+  private void CloseModal()
+  {
+    selectedSearch = null;
+  }
+
+  private async Task HandleLogout()
+  {
+    await AuthService.Logout();
+    NavigationManager.NavigateTo("/");
+  }
+}

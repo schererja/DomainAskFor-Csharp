@@ -2,8 +2,24 @@
 
 <div class="main">
   <div class="top-row px-4">
-    <h3 class="text-primary">DomainAskFor</h3>
-    <p class="text-muted">Find available domain names with synonym suggestions</p>
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h3 class="text-primary mb-0">DomainAskFor</h3>
+        <p class="text-muted mb-0">Find available domain names with synonym suggestions</p>
+      </div>
+      <div class="auth-links">
+        <AuthorizeView>
+          <Authorized>
+            <a href="/dashboard" class="btn btn-outline-primary btn-sm me-2">Dashboard</a>
+            <span class="me-2">@context.User.Identity.Name</span>
+          </Authorized>
+          <NotAuthorized>
+            <a href="/login" class="btn btn-outline-primary btn-sm me-2">Login</a>
+            <a href="/register" class="btn btn-primary btn-sm">Register</a>
+          </NotAuthorized>
+        </AuthorizeView>
+      </div>
+    </div>
   </div>
 
   <div class="content px-4">

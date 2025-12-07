@@ -1,9 +1,13 @@
 ﻿@using Models
+@using DomainAskFor.Models
 @using HttpRepository
 @using HttpRepository.SynonymsRepository
+@using DomainAskFor.Client.Services
 @using Radzen.Blazor
 @inject IWhoIsHttpRepository whoIsRepository
 @inject ISynonymRepository synonymsRepository
+@inject ISearchHistoryService searchHistoryService
+@inject IAuthService authService
 
 <div class="search-form">
   <EditForm Model="searchFormModel" OnValidSubmit="@HandleValidSubmit">
@@ -168,6 +172,23 @@
           });
         }
         StateHasChanged(); // Update UI as we check each domain
+      }
+
+      // Save search history if user is logged in
+      if (await authService.IsAuthenticated())
+      {
+        await searchHistoryService.SaveSearch(new SaveSearchRequest
+        {
+          SearchTerm = searchFormModel.Word,
+          Prefix = searchFormModel.Prefix,
+          Suffix = searchFormModel.Suffix,
+          TLD = searchFormModel.TLD.ToString(),
+          Results = domainResults.Select(r => new SearchResultItem
+          {
+            DomainName = r.DomainName,
+            IsAvailable = r.IsAvailable
+          }).ToList()
+        });
       }
     }
     catch (Exception ex)

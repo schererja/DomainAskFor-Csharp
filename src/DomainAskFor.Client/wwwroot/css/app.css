@@ -188,3 +188,90 @@ a,
   font-size: 0.875rem;
   margin-top: 0.25rem;
 }
+
+/* Auth pages styling */
+.card {
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  padding: 1rem 1.5rem;
+  font-weight: 600;
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+.auth-links {
+  display: flex;
+  align-items: center;
+}
+
+/* Dashboard styling */
+.table {
+  margin-bottom: 0;
+}
+
+.table-responsive {
+  border-radius: 0.25rem;
+}
+
+.modal.show {
+  display: block;
+}
+
+.list-group-item-success {
+  background-color: #d4edda;
+  border-color: #c3e6cb;
+}
+
+.list-group-item-secondary {
+  background-color: #e2e3e5;
+  border-color: #d6d8db;
+}
+
+.bg-secondary {
+  background-color: #6c757d !important;
+}
+
+.bg-info {
+  background-color: #0dcaf0 !important;
+}
+
+.bg-success {
+  background-color: #198754 !important;
+}
+
+.w-100 {
+  width: 100%;
+}
+
+.d-flex {
+  display: flex;
+}
+
+.justify-content-between {
+  justify-content: space-between;
+}
+
+.justify-content-center {
+  justify-content: center;
+}
+
+.align-items-center {
+  align-items: center;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.py-4 {
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+}
