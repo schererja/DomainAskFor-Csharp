@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DomainAskFor.Models\DomainAskFor.Models.csproj" />
+    <ProjectReference Include="..\DomainAskFor.ServiceDefaults\DomainAskFor.ServiceDefaults.csproj" />
   </ItemGroup>
 
 </Project>

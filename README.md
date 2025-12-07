@@ -38,19 +38,33 @@ cd DomainAskFor-Csharp
    - Update `src/DomainAskFor.API/appsettings.json` with your Merriam-Webster API key
    - Configure Redis connection string if using caching
 
-3. Run the API server:
+3. **Run both API and Client together:**
 
-```bash
-cd src/DomainAskFor.API
-dotnet watch run
-```
+   **Option A - Using the run script (Recommended):**
+   ```bash
+   ./run-all.sh
+   ```
+   This starts both services and shows all logs. Press Ctrl+C to stop.
 
-4. Run the Blazor client (in a separate terminal):
+   **Option B - Using .NET Aspire:**
+   ```bash
+   dotnet run --project src/DomainAskFor.AppHost
+   ```
+   Opens Aspire Dashboard for monitoring both services.
 
-```bash
-cd src/DomainAskFor.Client
-dotnet watch run
-```
+   **Option C - Run manually in separate terminals:**
+
+   Terminal 1 - API:
+   ```bash
+   cd src/DomainAskFor.API
+   dotnet run
+   ```
+
+   Terminal 2 - Client:
+   ```bash
+   cd src/DomainAskFor.Client
+   dotnet run
+   ```
 
 The applications will be available at:
 
