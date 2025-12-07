@@ -9,41 +9,53 @@
 @inject ISearchHistoryService searchHistoryService
 @inject IAuthService authService
 
-<div class="search-form">
+<div class="bg-white/90 backdrop-blur shadow-2xl rounded-2xl p-6 md:p-8 border border-white/50">
   <EditForm Model="searchFormModel" OnValidSubmit="@HandleValidSubmit">
     <DataAnnotationsValidator />
     <ValidationSummary />
 
-    <div class="form-group">
-      <label for="prefix">Prefix (optional)</label>
-      <InputText id="prefix" class="form-control" @bind-Value="searchFormModel.Prefix"
-        placeholder="e.g., my, get, find" />
+    <div class="grid md:grid-cols-2 gap-4">
+      <div class="space-y-2">
+        <label class="text-sm font-semibold text-slate-700" for="prefix">Prefix (optional)</label>
+        <InputText id="prefix"
+          class="w-full rounded-xl border border-slate-200 px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 bg-white/80"
+          @bind-Value="searchFormModel.Prefix" placeholder="e.g., my, get, find" />
+      </div>
+
+      <div class="space-y-2">
+        <label class="text-sm font-semibold text-slate-700" for="word">Word *</label>
+        <InputText id="word"
+          class="w-full rounded-xl border border-slate-200 px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 bg-white/80"
+          @bind-Value="searchFormModel.Word" placeholder="e.g., domain, name" />
+      </div>
+
+      <div class="space-y-2">
+        <label class="text-sm font-semibold text-slate-700" for="suffix">Suffix (optional)</label>
+        <InputText id="suffix"
+          class="w-full rounded-xl border border-slate-200 px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 bg-white/80"
+          @bind-Value="searchFormModel.Suffix" placeholder="e.g., now, online, app" />
+      </div>
+
+      <div class="space-y-2">
+        <label class="text-sm font-semibold text-slate-700" for="tld">Top Level Domain *</label>
+        <select id="tld"
+          class="w-full rounded-xl border border-slate-200 px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 bg-white/80"
+          @bind="searchFormModel.TLD">
+          @foreach (Enum e in Enum.GetValues(typeof(TLDModel)))
+          {
+            <option value="@e">.@e.ToString()</option>
+          }
+        </select>
+      </div>
     </div>
 
-    <div class="form-group">
-      <label for="word">Word *</label>
-      <InputText id="word" class="form-control" @bind-Value="searchFormModel.Word" placeholder="e.g., domain, name" />
-    </div>
-
-    <div class="form-group">
-      <label for="suffix">Suffix (optional)</label>
-      <InputText id="suffix" class="form-control" @bind-Value="searchFormModel.Suffix"
-        placeholder="e.g., now, online, app" />
-    </div>
-
-    <div class="form-group">
-      <label for="tld">Top Level Domain *</label>
-      <select id="tld" class="form-control" @bind="searchFormModel.TLD">
-        @foreach (Enum e in Enum.GetValues(typeof(TLDModel)))
-        {
-          <option value="@e">.@e.ToString()</option>
-        }
-      </select>
-    </div>
-
-    <div class="form-group">
-      <button class="btn btn-secondary" type="button" @onclick="@ClearValues">Clear</button>
-      <button class="btn btn-primary" type="submit" disabled="@isSearching">
+    <div class="mt-6 flex flex-wrap gap-3">
+      <button
+        class="inline-flex items-center justify-center px-4 py-2.5 rounded-xl font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition"
+        type="button" @onclick="@ClearValues">Clear</button>
+      <button
+        class="inline-flex items-center justify-center px-5 py-3 rounded-xl font-semibold text-white shadow-lg shadow-brand-500/30"
+        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);" type="submit" disabled="@isSearching">
         @if (isSearching)
         {
           <span>Searching...</span>
@@ -59,40 +71,55 @@
 
 @if (domainResults.Any())
 {
-  <div class="results-section">
-    <h3>Domain Search Results</h3>
-    <p>Found @domainResults.Count domain(s) to check:</p>
+  <div class="mt-8 space-y-4">
+    <div class="bg-white/90 backdrop-blur rounded-2xl shadow-xl p-6 border border-white/50">
+      <h3 class="text-xl font-bold text-slate-800">Domain Search Results</h3>
+      <p class="text-slate-600">Found @domainResults.Count domain(s) to check:</p>
+    </div>
 
     @foreach (var result in domainResults)
     {
-      <div class="domain-result @(result.IsAvailable ? "domain-available" : "domain-unavailable")">
-        <div class="domain-info">
-          <strong>@result.DomainName</strong>
+      <div class="rounded-2xl border border-white/60 shadow-lg p-5 bg-white/90 backdrop-blur">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="text-lg font-semibold text-slate-800">@result.DomainName</div>
           @if (result.IsAvailable)
           {
-            <span class="badge badge-success">✓ Available</span>
+            <span class="inline-flex items-center px-3 py-1 text-sm font-semibold text-green-700 bg-green-100 rounded-full">✓
+              Available</span>
           }
           else
           {
-            <span class="badge badge-danger">✗ Taken</span>
+            <span class="inline-flex items-center px-3 py-1 text-sm font-semibold text-rose-700 bg-rose-100 rounded-full">✗
+              Taken</span>
           }
         </div>
+
         @if (result.IsAvailable)
         {
-          <div class="domain-actions mt-2">
-            <p class="text-muted small mb-2">Buy this domain at:</p>
-            <a href="@GetRegistrarUrl("namecheap", result.DomainName)" target="_blank" class="btn btn-sm btn-primary me-2">
-              Namecheap
-            </a>
-            <a href="@GetRegistrarUrl("godaddy", result.DomainName)" target="_blank" class="btn btn-sm btn-primary me-2">
-              GoDaddy
-            </a>
-            <a href="@GetRegistrarUrl("squarespace", result.DomainName)" target="_blank" class="btn btn-sm btn-primary me-2">
-              Squarespace
-            </a>
-            <a href="@GetRegistrarUrl("porkbun", result.DomainName)" target="_blank" class="btn btn-sm btn-primary">
-              Porkbun
-            </a>
+          <div class="mt-3 border-t border-slate-200 pt-3">
+            <p class="text-sm text-slate-600 mb-2">Buy this domain at:</p>
+            <div class="flex flex-wrap gap-2">
+              <a href="@GetRegistrarUrl("namecheap", result.DomainName)" target="_blank"
+                class="inline-flex items-center px-3 py-2 text-sm font-semibold text-white rounded-lg"
+                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                Namecheap
+              </a>
+              <a href="@GetRegistrarUrl("godaddy", result.DomainName)" target="_blank"
+                class="inline-flex items-center px-3 py-2 text-sm font-semibold text-white rounded-lg"
+                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                GoDaddy
+              </a>
+              <a href="@GetRegistrarUrl("squarespace", result.DomainName)" target="_blank"
+                class="inline-flex items-center px-3 py-2 text-sm font-semibold text-white rounded-lg"
+                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                Squarespace
+              </a>
+              <a href="@GetRegistrarUrl("porkbun", result.DomainName)" target="_blank"
+                class="inline-flex items-center px-3 py-2 text-sm font-semibold text-white rounded-lg"
+                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                Porkbun
+              </a>
+            </div>
           </div>
         }
       </div>
@@ -102,7 +129,7 @@
 
 @if (!string.IsNullOrEmpty(errorMessage))
 {
-  <div class="alert alert-danger">
+  <div class="mt-4 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 px-4 py-3 font-semibold">
     @errorMessage
   </div>
 }
@@ -175,9 +202,13 @@
       }
 
       // Save search history if user is logged in
-      if (await authService.IsAuthenticated())
+      var isAuth = await authService.IsAuthenticated();
+      Console.WriteLine($"User authenticated: {isAuth}");
+
+      if (isAuth)
       {
-        await searchHistoryService.SaveSearch(new SaveSearchRequest
+        Console.WriteLine($"Saving search for: {searchFormModel.Word}");
+        var saved = await searchHistoryService.SaveSearch(new SaveSearchRequest
         {
           SearchTerm = searchFormModel.Word,
           Prefix = searchFormModel.Prefix,
@@ -189,6 +220,11 @@
             IsAvailable = r.IsAvailable
           }).ToList()
         });
+        Console.WriteLine($"Search saved: {saved}");
+      }
+      else
+      {
+        Console.WriteLine("User not authenticated, skipping save");
       }
     }
     catch (Exception ex)

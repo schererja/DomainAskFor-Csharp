@@ -27,11 +27,19 @@ namespace DomainAskFor.Client.Services
     {
       try
       {
+        Console.WriteLine($"Attempting to save search for term: {request.SearchTerm}");
         var response = await _httpClient.PostAsJsonAsync("api/v1/SearchHistory", request);
+        Console.WriteLine($"Save search response status: {response.StatusCode}");
+        if (!response.IsSuccessStatusCode)
+        {
+          var errorContent = await response.Content.ReadAsStringAsync();
+          Console.WriteLine($"Save search error: {errorContent}");
+        }
         return response.IsSuccessStatusCode;
       }
-      catch
+      catch (Exception ex)
       {
+        Console.WriteLine($"Exception saving search: {ex.Message}");
         return false;
       }
     }
@@ -40,11 +48,14 @@ namespace DomainAskFor.Client.Services
     {
       try
       {
+        Console.WriteLine("Attempting to get search history...");
         var response = await _httpClient.GetFromJsonAsync<List<SearchHistoryModel>>("api/v1/SearchHistory");
+        Console.WriteLine($"Retrieved {response?.Count ?? 0} search history items");
         return response ?? new List<SearchHistoryModel>();
       }
-      catch
+      catch (Exception ex)
       {
+        Console.WriteLine($"Exception getting search history: {ex.Message}");
         return new List<SearchHistoryModel>();
       }
     }

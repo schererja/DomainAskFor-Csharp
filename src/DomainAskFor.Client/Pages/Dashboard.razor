@@ -7,154 +7,151 @@
 @inject IAuthService AuthService
 @inject NavigationManager NavigationManager
 
-<div class="container">
-  <div class="row">
-    <div class="col-12">
-      <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>My Dashboard</h2>
-        <div>
-          <AuthorizeView>
-            <Authorized>
-              <span class="me-3">Welcome, @context.User.Identity.Name</span>
-              <button class="btn btn-outline-secondary btn-sm" @onclick="HandleLogout">Logout</button>
-            </Authorized>
-          </AuthorizeView>
-        </div>
+<div class="space-y-6">
+  <div class="rounded-2xl bg-gradient-to-r from-brand-500 to-purple-600 text-white shadow-2xl p-6 md:p-8">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <h2 class="text-2xl font-extrabold mb-1">My Dashboard</h2>
+        <AuthorizeView>
+          <Authorized>
+            <p class="text-white/90">Welcome back, <strong>@context.User.Identity.Name</strong></p>
+          </Authorized>
+        </AuthorizeView>
       </div>
+      <a href="/"
+        class="inline-flex items-center px-4 py-2.5 rounded-xl font-semibold text-slate-800 bg-white/90 hover:bg-white shadow-lg">
+        New Search
+      </a>
+    </div>
+  </div>
 
-      <div class="card mb-4">
-        <div class="card-header">
-          <h4>Quick Actions</h4>
-        </div>
-        <div class="card-body">
-          <a href="/" class="btn btn-primary">New Domain Search</a>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <h4>Search History</h4>
-          <button class="btn btn-outline-primary btn-sm" @onclick="LoadSearchHistory">
-            <span>Refresh</span>
-          </button>
-        </div>
-        <div class="card-body">
-          @if (isLoading)
-          {
-            <div class="text-center py-4">
-              <p>Loading search history...</p>
-            </div>
-          }
-          else if (searchHistory == null || !searchHistory.Any())
-          {
-            <div class="text-center py-4">
-              <p class="text-muted">No searches yet. <a href="/">Start searching</a> to see your history here.</p>
-            </div>
-          }
-          else
-          {
-            <div class="table-responsive">
-              <table class="table table-hover">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Search Term</th>
-                    <th>TLD</th>
-                    <th>Results</th>
-                    <th>Available Domains</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @foreach (var search in searchHistory.OrderByDescending(s => s.SearchedAt))
-                  {
-                    <tr>
-                      <td>@search.SearchedAt.ToString("MMM dd, yyyy HH:mm")</td>
-                      <td>
-                        @if (!string.IsNullOrEmpty(search.Prefix))
-                        {
-                          <span class="badge bg-secondary">@search.Prefix</span>
-                        }
-                        <strong>@search.SearchTerm</strong>
-                        @if (!string.IsNullOrEmpty(search.Suffix))
-                        {
-                          <span class="badge bg-secondary">@search.Suffix</span>
-                        }
-                      </td>
-                      <td><span class="badge bg-info">.@search.TLD</span></td>
-                      <td>@search.Results?.Count ?? 0</td>
-                      <td>
-                        @{
-                          var availableCount = search.Results?.Count(r => r.IsAvailable) ?? 0;
-                          var badgeClass = availableCount > 0 ? "bg-success" : "bg-secondary";
-                        }
-                        <span class="badge @badgeClass">@availableCount available</span>
-                      </td>
-                      <td>
-                        <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => ViewSearchDetails(search)">
-                          View
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteSearch(search.Id)">
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          }
-        </div>
-      </div>
-
-      @if (selectedSearch != null)
+  <div class="bg-white/95 backdrop-blur rounded-2xl shadow-xl border border-white/60">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+      <h4 class="text-lg font-bold text-slate-800">Search History</h4>
+      <button
+        class="inline-flex items-center px-3 py-2 text-sm font-semibold text-brand-600 border border-brand-200 rounded-lg hover:bg-brand-50 transition"
+        @onclick="LoadSearchHistory">Refresh</button>
+    </div>
+    <div class="p-6">
+      @if (isLoading)
       {
-        <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-          <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title">Search Results Details</h5>
-                <button type="button" class="btn-close" @onclick="CloseModal"></button>
-              </div>
-              <div class="modal-body">
-                <p><strong>Search Term:</strong> @selectedSearch.Prefix@selectedSearch.SearchTerm@selectedSearch.Suffix
-                </p>
-                <p><strong>Date:</strong> @selectedSearch.SearchedAt.ToString("MMMM dd, yyyy HH:mm")</p>
-                <p><strong>TLD:</strong> .@selectedSearch.TLD</p>
-
-                <h6 class="mt-3">Results:</h6>
-                @if (selectedSearch.Results != null && selectedSearch.Results.Any())
-                {
-                  <div class="list-group">
-                    @foreach (var result in selectedSearch.Results)
+        <div class="text-center py-6 text-slate-600">Loading search history...</div>
+      }
+      else if (searchHistory == null || !searchHistory.Any())
+      {
+        <div class="text-center py-6 text-slate-500">No searches yet. <a class="text-brand-600 font-semibold"
+            href="/">Start searching</a> to see your history here.</div>
+      }
+      else
+      {
+        <div class="overflow-hidden rounded-xl border border-slate-100 shadow-sm">
+          <table class="min-w-full divide-y divide-slate-200">
+            <thead class="bg-slate-50">
+              <tr class="text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <th class="px-4 py-3">Date</th>
+                <th class="px-4 py-3">Search Term</th>
+                <th class="px-4 py-3">TLD</th>
+                <th class="px-4 py-3">Results</th>
+                <th class="px-4 py-3">Available Domains</th>
+                <th class="px-4 py-3">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 bg-white">
+              @foreach (var search in searchHistory.OrderByDescending(s => s.SearchedAt))
+              {
+                var availableCount = search.Results?.Count(r => r.IsAvailable) ?? 0;
+                <tr class="hover:bg-slate-50 transition">
+                  <td class="px-4 py-3 text-sm text-slate-700">@search.SearchedAt.ToString("MMM dd, yyyy HH:mm")</td>
+                  <td class="px-4 py-3 text-sm text-slate-800 space-x-1">
+                    @if (!string.IsNullOrEmpty(search.Prefix))
                     {
-                      <div
-                        class="list-group-item @(result.IsAvailable ? "list-group-item-success" : "list-group-item-secondary")">
-                        <div class="d-flex justify-content-between align-items-center">
-                          <span>@result.DomainName</span>
-                          @if (result.IsAvailable)
-                          {
-                            <span class="badge bg-success">✓ Available</span>
-                          }
-                          else
-                          {
-                            <span class="badge bg-danger">✗ Taken</span>
-                          }
-                        </div>
-                      </div>
+                      <span
+                        class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">@search.Prefix</span>
                     }
-                  </div>
-                }
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" @onclick="CloseModal">Close</button>
-              </div>
-            </div>
-          </div>
+                    <span class="font-semibold">@search.SearchTerm</span>
+                    @if (!string.IsNullOrEmpty(search.Suffix))
+                    {
+                      <span
+                        class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">@search.Suffix</span>
+                    }
+                  </td>
+                  <td class="px-4 py-3 text-sm">
+                    <span
+                      class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-brand-50 text-brand-700 border border-brand-100">.@search.TLD</span>
+                  </td>
+                  <td class="px-4 py-3 text-sm text-slate-700">@search.Results?.Count ?? 0</td>
+                  <td class="px-4 py-3 text-sm">
+                    <span
+                      class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold @(availableCount > 0 ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600")">@availableCount
+                      available</span>
+                  </td>
+                  <td class="px-4 py-3 text-sm">
+                    <div class="flex flex-wrap gap-2">
+                      <button
+                        class="inline-flex items-center px-3 py-2 text-sm font-semibold text-brand-600 border border-brand-200 rounded-lg hover:bg-brand-50 transition"
+                        @onclick="() => ViewSearchDetails(search)">View</button>
+                      <button
+                        class="inline-flex items-center px-3 py-2 text-sm font-semibold text-rose-600 border border-rose-200 rounded-lg hover:bg-rose-50 transition"
+                        @onclick="() => DeleteSearch(search.Id)">Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
         </div>
       }
     </div>
   </div>
+
+  @if (selectedSearch != null)
+  {
+    <div class="fixed inset-0 z-30 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4">
+      <div class="w-full max-w-3xl bg-white rounded-2xl shadow-2xl overflow-hidden">
+        <div
+          class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-brand-500 to-purple-600 text-white">
+          <h5 class="text-lg font-bold">Search Results Details</h5>
+          <button type="button" class="text-white/90 hover:text-white" @onclick="CloseModal">✕</button>
+        </div>
+        <div class="p-6 space-y-2">
+          <p class="text-slate-700"><strong>Search Term:</strong>
+            @selectedSearch.Prefix@selectedSearch.SearchTerm@selectedSearch.Suffix</p>
+          <p class="text-slate-700"><strong>Date:</strong> @selectedSearch.SearchedAt.ToString("MMMM dd, yyyy HH:mm")</p>
+          <p class="text-slate-700"><strong>TLD:</strong> .@selectedSearch.TLD</p>
+
+          <h6 class="mt-4 text-sm font-semibold text-slate-600">Results:</h6>
+          @if (selectedSearch.Results != null && selectedSearch.Results.Any())
+          {
+            <div class="space-y-2">
+              @foreach (var result in selectedSearch.Results)
+              {
+                <div class="flex items-center justify-between px-4 py-3 rounded-xl border border-slate-200 bg-slate-50">
+                  <span class="font-semibold text-slate-800">@result.DomainName</span>
+                  @if (result.IsAvailable)
+                  {
+                    <span
+                      class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">✓
+                      Available</span>
+                  }
+                  else
+                  {
+                    <span
+                      class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-700">✗
+                      Taken</span>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+        <div class="px-6 py-4 border-t border-slate-100 flex justify-end">
+          <button type="button"
+            class="inline-flex items-center px-4 py-2 rounded-lg font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200"
+            @onclick="CloseModal">Close</button>
+        </div>
+      </div>
+    </div>
+  }
 </div>
 
 @code {
