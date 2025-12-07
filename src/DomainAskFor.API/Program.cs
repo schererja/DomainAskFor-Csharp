@@ -6,6 +6,9 @@ using Microsoft.Extensions.Hosting;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add service defaults & Aspire client integrations
+builder.AddServiceDefaults();
+
 // Configure CORS
 const string AllowedOrigins = "_allowedSpecificOrigins";
 builder.Services.AddCors(options =>
@@ -38,6 +41,9 @@ builder.Services.AddStackExchangeRedisCache(options =>
 });
 
 var app = builder.Build();
+
+// Map default endpoints for health checks, etc.
+app.MapDefaultEndpoints();
 
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())

@@ -1,13 +1,20 @@
 ﻿@page "/"
 
-<div class="container">
-  <div class="row justify-content-center">
-    <div class="col-md-8">
-      <div class="text-center mb-4">
-        <h1>Domain Name Search</h1>
-        <p class="lead">Enter a word to find available domain names and synonym alternatives</p>
-      </div>
-      <SearchForm />
+<section class="max-w-6xl mx-auto">
+  <div class="text-center mb-10">
+    <h1 class="text-4xl md:text-5xl font-extrabold text-white drop-shadow-sm">Discover Your Perfect Domain</h1>
+    <p class="mt-4 text-lg text-slate-100/90 max-w-2xl mx-auto">
+      Find available domain names with intelligent synonym suggestions powered by real-time WHOIS lookup
+    </p>
+    <div class="mt-5 flex flex-wrap justify-center gap-3">
+      <span class="px-4 py-2 rounded-full text-sm font-semibold bg-white/15 text-white border border-white/20">✓
+        Real-time availability</span>
+      <span class="px-4 py-2 rounded-full text-sm font-semibold bg-white/15 text-white border border-white/20">✓ Synonym
+        alternatives</span>
+      <span class="px-4 py-2 rounded-full text-sm font-semibold bg-white/15 text-white border border-white/20">✓
+        Multiple TLDs</span>
     </div>
   </div>
-</div>
+
+  <SearchForm />
+</section>
